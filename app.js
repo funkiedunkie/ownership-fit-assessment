@@ -23,43 +23,23 @@ const wordPairs = [
 const scenarios = [
   {
     prompt: "A business is profitable but tightly constrained.",
-    options: [
-      "Focus on operating it well",
-      "Improve performance within limits",
-      "Plan how to rework or expand it"
-    ]
+    options: ["Operate it well", "Optimize within limits", "Rework or expand it"]
   },
   {
     prompt: "Income is inconsistent but promising.",
-    options: [
-      "Stabilize cash flow quickly",
-      "Diagnose the core issue",
-      "Accept volatility and experiment"
-    ]
+    options: ["Stabilize quickly", "Diagnose first", "Experiment"]
   },
   {
     prompt: "You disagree with an established rule.",
-    options: [
-      "Follow it anyway",
-      "Work around it carefully",
-      "Replace it"
-    ]
+    options: ["Follow it", "Work around it", "Replace it"]
   },
   {
     prompt: "Progress depends mostly on you.",
-    options: [
-      "I feel focused",
-      "I feel engaged",
-      "I feel energized"
-    ]
+    options: ["Focused", "Engaged", "Energized"]
   },
   {
     prompt: "Progress depends mostly on systems or others.",
-    options: [
-      "I feel relieved",
-      "I feel neutral",
-      "I feel constrained"
-    ]
+    options: ["Relieved", "Neutral", "Constrained"]
   }
 ];
 
@@ -72,6 +52,33 @@ let responses = {
   pairTimes: [],
   scenarios: []
 };
+
+/* ---------- SCORING MAPS (INTERNAL) ---------- */
+
+const wordScores = {
+  Franchise: ["Methodical","Consistent","Reliable","Structured","Patient","Practical","Measured"],
+  Existing: ["Persistent","Collaborative","Assertive","Decisive","Resilient"],
+  Startup: ["Experimental","Opportunistic","Vision-driven","Exploratory","Adaptive","Iterative","Independent"]
+};
+
+const pairScores = {
+  Franchise: ["Predictable","Proven","Steady","Disciplined","Reliable","Consistent","Methodical","Tested"],
+  Startup: ["Flexible","Unproven","Opportunistic","Inventive","Experimental","Adaptive","Fast-moving","Exploratory"]
+};
+
+const scenarioScores = {
+  Franchise: ["Operate it well","Stabilize quickly","Follow it","Relieved"],
+  Existing: ["Optimize within limits","Diagnose first","Work around it","Focused","Engaged","Neutral"],
+  Startup: ["Rework or expand it","Experiment","Replace it","Energized","Constrained"]
+};
+
+/* ---------- TIMING ---------- */
+
+function timingMultiplier(ms) {
+  if (ms < 1500) return 1.0;
+  if (ms < 3000) return 0.7;
+  return 0.4;
+}
 
 /* ---------- WORD SELECTION ---------- */
 
@@ -173,14 +180,48 @@ function renderScenarios() {
   showScenario();
 }
 
+/* ---------- SCORING ---------- */
+
+function calculateScore() {
+  let score = { Franchise: 0, Existing: 0, Startup: 0 };
+
+  responses.words.forEach((w, i) => {
+    const weight = timingMultiplier(responses.wordTimes[i]);
+    Object.keys(wordScores).forEach(type => {
+      if (wordScores[type].includes(w)) score[type] += 1 * weight;
+    });
+  });
+
+  responses.pairs.forEach((p, i) => {
+    const weight = timingMultiplier(responses.pairTimes[i]);
+    Object.keys(pairScores).forEach(type => {
+      if (pairScores[type].includes(p)) score[type] += 1 * weight;
+    });
+  });
+
+  responses.scenarios.forEach(s => {
+    Object.keys(scenarioScores).forEach(type => {
+      if (scenarioScores[type].includes(s)) score[type] += 1;
+    });
+  });
+
+  return score;
+}
+
 /* ---------- FINISH ---------- */
 
 function finish() {
-  console.log("FINAL RESULTS:", responses);
+  const score = calculateScore();
+  const result = Object.keys(score).reduce((a, b) =>
+    score[a] > score[b] ? a : b
+  );
+
+  console.log("FINAL SCORE:", score);
 
   app.innerHTML = `
-    <h2>Assessment complete</h2>
-    <p>Thank you. Results captured.</p>
+    <h2>Your Ownership Fit</h2>
+    <h1>${result}</h1>
+    <p>This reflects how you respond under real decision pressure.</p>
   `;
 }
 
