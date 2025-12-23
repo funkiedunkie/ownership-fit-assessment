@@ -20,13 +20,57 @@ const wordPairs = [
   ["Tested", "Exploratory"]
 ];
 
+const scenarios = [
+  {
+    prompt: "A business is profitable but tightly constrained.",
+    options: [
+      "Focus on operating it well",
+      "Improve performance within limits",
+      "Plan how to rework or expand it"
+    ]
+  },
+  {
+    prompt: "Income is inconsistent but promising.",
+    options: [
+      "Stabilize cash flow quickly",
+      "Diagnose the core issue",
+      "Accept volatility and experiment"
+    ]
+  },
+  {
+    prompt: "You disagree with an established rule.",
+    options: [
+      "Follow it anyway",
+      "Work around it carefully",
+      "Replace it"
+    ]
+  },
+  {
+    prompt: "Progress depends mostly on you.",
+    options: [
+      "I feel focused",
+      "I feel engaged",
+      "I feel energized"
+    ]
+  },
+  {
+    prompt: "Progress depends mostly on systems or others.",
+    options: [
+      "I feel relieved",
+      "I feel neutral",
+      "I feel constrained"
+    ]
+  }
+];
+
 /* ---------- STATE ---------- */
 
 let responses = {
   words: [],
   wordTimes: [],
   pairs: [],
-  pairTimes: []
+  pairTimes: [],
+  scenarios: []
 };
 
 /* ---------- WORD SELECTION ---------- */
@@ -73,7 +117,7 @@ function renderWordPairs() {
 
   function showPair() {
     if (index >= wordPairs.length) {
-      finish();
+      renderScenarios();
       return;
     }
 
@@ -100,13 +144,43 @@ function renderWordPairs() {
   showPair();
 }
 
+/* ---------- SCENARIOS ---------- */
+
+function renderScenarios() {
+  let index = 0;
+
+  function showScenario() {
+    if (index >= scenarios.length) {
+      finish();
+      return;
+    }
+
+    const s = scenarios[index];
+    app.innerHTML = `<h2>${s.prompt}</h2>`;
+
+    s.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+      btn.onclick = () => {
+        responses.scenarios.push(opt);
+        index++;
+        showScenario();
+      };
+      app.appendChild(btn);
+    });
+  }
+
+  showScenario();
+}
+
 /* ---------- FINISH ---------- */
 
 function finish() {
-  console.log("RESULTS:", responses);
+  console.log("FINAL RESULTS:", responses);
+
   app.innerHTML = `
-    <h2>Section complete</h2>
-    <p>Open the console to see captured data.</p>
+    <h2>Assessment complete</h2>
+    <p>Thank you. Results captured.</p>
   `;
 }
 
