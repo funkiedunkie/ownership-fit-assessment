@@ -86,5 +86,30 @@ function renderWordPairs() {
       <button id="b">${b}</button>
     `;
 
-    document.getElem
+    document.getElementById("a").onclick = () => select(a);
+    document.getElementById("b").onclick = () => select(b);
 
+    function select(choice) {
+      responses.pairs.push(choice);
+      responses.pairTimes.push(performance.now() - start);
+      index++;
+      showPair();
+    }
+  }
+
+  showPair();
+}
+
+/* ---------- FINISH ---------- */
+
+function finish() {
+  console.log("RESULTS:", responses);
+  app.innerHTML = `
+    <h2>Section complete</h2>
+    <p>Open the console to see captured data.</p>
+  `;
+}
+
+/* ---------- START ---------- */
+
+renderWordSelection();
