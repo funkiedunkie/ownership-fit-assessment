@@ -208,6 +208,25 @@ function calculateScore() {
   return score;
 }
 
+/* ---------- CONFIDENCE ---------- */
+
+function confidenceFlag(score) {
+  const values = Object.values(score).sort((a, b) => b - a);
+  const gap = values[0] - values[1];
+
+  if (gap >= 3) return "High confidence";
+  if (gap >= 1.5) return "Moderate confidence";
+  return "Lower confidence";
+}
+
+/* ---------- EXPLANATIONS ---------- */
+
+const explanations = {
+  Franchise: "You tend to perform best when expectations are clear, systems are proven, and consistency matters more than invention.",
+  Existing: "You’re strongest improving what already works—making judgment calls, optimizing operations, and leading within real constraints.",
+  Startup: "You’re energized by ambiguity and opportunity, and you perform best when experimentation and invention are required."
+};
+
 /* ---------- FINISH ---------- */
 
 function finish() {
@@ -215,13 +234,15 @@ function finish() {
   const result = Object.keys(score).reduce((a, b) =>
     score[a] > score[b] ? a : b
   );
+  const confidence = confidenceFlag(score);
 
-  console.log("FINAL SCORE:", score);
+  console.log("FINAL SCORE:", score, confidence);
 
   app.innerHTML = `
     <h2>Your Ownership Fit</h2>
     <h1>${result}</h1>
-    <p>This reflects how you respond under real decision pressure.</p>
+    <p><strong>${confidence}</strong></p>
+    <p>${explanations[result]}</p>
   `;
 }
 
