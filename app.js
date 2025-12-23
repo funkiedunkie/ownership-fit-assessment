@@ -1,5 +1,7 @@
 const app = document.getElementById("app");
 
+/* ---------- DATA ---------- */
+
 const words = [
   "Methodical","Adaptive","Persistent","Experimental","Cautious",
   "Assertive","Patient","Decisive","Opportunistic","Consistent",
@@ -7,8 +9,27 @@ const words = [
   "Reliable","Iterative","Measured","Resilient","Structured","Exploratory"
 ];
 
-let selected = [];
-let timings = [];
+const wordPairs = [
+  ["Predictable", "Flexible"],
+  ["Proven", "Unproven"],
+  ["Steady", "Opportunistic"],
+  ["Disciplined", "Inventive"],
+  ["Reliable", "Experimental"],
+  ["Consistent", "Adaptive"],
+  ["Methodical", "Fast-moving"],
+  ["Tested", "Exploratory"]
+];
+
+/* ---------- STATE ---------- */
+
+let responses = {
+  words: [],
+  wordTimes: [],
+  pairs: [],
+  pairTimes: []
+};
+
+/* ---------- WORD SELECTION ---------- */
 
 function renderWordSelection() {
   app.innerHTML = `
@@ -26,16 +47,15 @@ function renderWordSelection() {
     btn.textContent = word;
 
     btn.onclick = () => {
-      if (selected.length >= 5 || btn.disabled) return;
+      if (responses.words.length >= 5 || btn.disabled) return;
 
-      const clickTime = performance.now();
-      selected.push(word);
-      timings.push(clickTime - startTime);
+      responses.words.push(word);
+      responses.wordTimes.push(performance.now() - startTime);
 
       btn.disabled = true;
       btn.style.opacity = 0.5;
 
-      if (selected.length === 5) {
+      if (responses.words.length === 5) {
         document.getElementById("continue").disabled = false;
       }
     };
@@ -43,11 +63,28 @@ function renderWordSelection() {
     grid.appendChild(btn);
   });
 
-  document.getElementById("continue").onclick = () => {
-    console.log("Selected words:", selected);
-    console.log("Timings (ms):", timings);
-    app.innerHTML = `<h2>Section complete</h2><p>Check the console.</p>`;
-  };
+  document.getElementById("continue").onclick = renderWordPairs;
 }
 
-renderWordSelection();
+/* ---------- WORD PAIRS ---------- */
+
+function renderWordPairs() {
+  let index = 0;
+
+  function showPair() {
+    if (index >= wordPairs.length) {
+      finish();
+      return;
+    }
+
+    const [a, b] = wordPairs[index];
+    const start = performance.now();
+
+    app.innerHTML = `
+      <h2>Choose quickly</h2>
+      <button id="a">${a}</button>
+      <button id="b">${b}</button>
+    `;
+
+    document.getElem
+
