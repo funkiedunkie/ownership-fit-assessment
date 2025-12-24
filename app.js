@@ -34,11 +34,11 @@ const scenarios = [
     options: ["Follow it", "Work around it", "Replace it"]
   },
   {
-    prompt: "Progress depends mostly on you.",
-    options: ["Focused", "Engaged", "Energized"]
+    prompt: "When progress depends mostly on you…",
+    options: ["Grounded", "Neutral", "Energized"]
   },
   {
-    prompt: "Progress depends mostly on systems or others.",
+    prompt: "When progress depends mostly on systems or others…",
     options: ["Relieved", "Neutral", "Constrained"]
   }
 ];
@@ -67,8 +67,8 @@ const pairScores = {
 };
 
 const scenarioScores = {
-  Franchise: ["Operate it well","Stabilize quickly","Follow it","Relieved"],
-  Existing: ["Optimize within limits","Diagnose first","Work around it","Focused","Engaged","Neutral"],
+  Franchise: ["Operate it well","Stabilize quickly","Follow it","Grounded","Relieved"],
+  Existing: ["Optimize within limits","Diagnose first","Work around it","Neutral"],
   Startup: ["Rework or expand it","Experiment","Replace it","Energized","Constrained"]
 };
 
@@ -182,7 +182,7 @@ function renderScenarios() {
 
 /* ---------- SCORING ---------- */
 
-function calculateScore() {
+function calculateRawScore() {
   let score = { Franchise: 0, Existing: 0, Startup: 0 };
 
   responses.words.forEach((w, i) => {
@@ -208,10 +208,19 @@ function calculateScore() {
   return score;
 }
 
+function normalizeScores(raw) {
+  const total = Object.values(raw).reduce((a, b) => a + b, 0);
+  return {
+    Franchise: Math.round((raw.Franchise / total) * 100),
+    Existing: Math.round((raw.Existing / total) * 100),
+    Startup: Math.round((raw.Startup / total) * 100)
+  };
+}
+
 /* ---------- CONFIDENCE ---------- */
 
-function confidenceFlag(score) {
-  const values = Object.values(score).sort((a, b) => b - a);
+function confidenceFlag(raw) {
+  const values = Object.values(raw).sort((a, b) => b - a);
   const gap = values[0] - values[1];
 
   if (gap >= 3) return "High confidence";
@@ -219,30 +228,34 @@ function confidenceFlag(score) {
   return "Lower confidence";
 }
 
-/* ---------- EXPLANATIONS ---------- */
-
-const explanations = {
-  Franchise: "You tend to perform best when expectations are clear, systems are proven, and consistency matters more than invention.",
-  Existing: "You’re strongest improving what already works—making judgment calls, optimizing operations, and leading within real constraints.",
-  Startup: "You’re energized by ambiguity and opportunity, and you perform best when experimentation and invention are required."
-};
-
 /* ---------- FINISH ---------- */
 
 function finish() {
-  const score = calculateScore();
-  const result = Object.keys(score).reduce((a, b) =>
-    score[a] > score[b] ? a : b
-  );
-  const confidence = confidenceFlag(score);
+  const raw = calculateRawScore();
+  const normalized = normalizeScores(raw);
+  const confidence = confidenceFlag(raw);
 
-  console.log("FINAL SCORE:", score, confidence);
+  const result = Object.keys(raw).reduce((a, b) =>
+    raw[a] > raw[b] ? a : b
+  );
 
   app.innerHTML = `
     <h2>Your Ownership Fit</h2>
     <h1>${result}</h1>
+
     <p><strong>${confidence}</strong></p>
-    <p>${explanations[result]}</p>
+
+    <h3>Fit Distribution</h3>
+    <p>
+      Franchise: ${normalized.Franchise}<br>
+      Existing Business: ${normalized.Existing}<br>
+      Startup: ${normalized.Startup}
+    </p>
+
+    <p>
+      This distribution reflects where you are most likely to succeed,
+      based on how you respond under real decision pressure.
+    </p>
   `;
 }
 
