@@ -18,6 +18,8 @@ h1, h2 {
   margin-top: 0;
 }
 
+/* ---------- WORD & OPTION BUTTONS ---------- */
+
 button {
   display: block;
   width: 100%;
@@ -25,4 +27,30 @@ button {
   padding: 14px;
   font-size: 16px;
   cursor: pointer;
+  background: #f1f1f1;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: #e6e6e6;
+}
+
+/* ---------- CONTINUE BUTTON ---------- */
+
+#continue {
+  margin-top: 30px;
+  background: #111;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+}
+
+#continue:hover {
+  background: #000;
+}
+
+#continue:disabled {
+  background: #bbb;
+  cursor: not-allowed;
 }
