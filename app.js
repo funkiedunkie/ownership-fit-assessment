@@ -87,9 +87,9 @@ const scenarios = [
   {
     prompt: "When I believe an existing process can be improved, I typically feel:",
     options: [
-      "Accepting (I’ll work within it and move on)",
-      "Engaged (I want the freedom to adjust it)",
-      "Constrained (I want to rethink it entirely)"
+      "Accepting\n(Work within it and move on)",
+      "Engaged\n(Want the freedom to adjust it)",
+      "Constrained\n(I want to rethink it entirely)"
     ]
   },
   {
