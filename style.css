@@ -1,56 +1,237 @@
+:root{
+  --bg: #f3f5f7;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+
+  --border: #e5e7eb;
+  --shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+
+  --choice-bg: #f8fafc;
+  --choice-border: #d1d5db;
+  --choice-hover: #eef2ff;
+
+  --selected-bg: rgba(37, 99, 235, 0.10);
+  --selected-border: rgba(37, 99, 235, 0.55);
+
+  --winner: #16a34a;
+}
+
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f7f7f7;
-  color: #222;
+  background: var(--bg);
+  color: var(--text);
   margin: 0;
-  padding: 40px;
+  padding: 40px 16px;
 }
 
-#app {
-  max-width: 700px;
+.card{
+  max-width: 720px;
   margin: 0 auto;
-  background: #fff;
-  padding: 32px;
-  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 22px;
 }
 
-h1, h2 {
-  margin-top: 0;
+.header{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
-/* ---------- WORD & OPTION BUTTONS ---------- */
+.progress-wrap{
+  flex: 1;
+  height: 10px;
+  background: #eef2f7;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
 
-button {
-  display: block;
+.progress{
+  height: 100%;
+  background: var(--primary);
+  width: 0%;
+}
+
+.step{
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+h2{
+  margin: 10px 0 6px 0;
+  font-size: 20px;
+}
+
+.subtitle{
+  margin: 0 0 14px 0;
+  color: var(--muted);
+}
+
+.content{
+  margin-top: 14px;
+}
+
+.btn-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.choice{
   width: 100%;
-  margin: 10px 0;
-  padding: 14px;
-  font-size: 16px;
+  text-align: left;
+  padding: 14px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--choice-border);
+  background: var(--choice-bg);
   cursor: pointer;
-  background: #f1f1f1;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  font-size: 16px;
+  transition: transform 0.03s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-button:hover {
-  background: #e6e6e6;
+.choice:hover{
+  background: var(--choice-hover);
 }
 
-/* ---------- CONTINUE BUTTON ---------- */
+.choice:active{
+  transform: translateY(1px);
+}
 
-#continue {
-  margin-top: 30px;
-  background: #111;
-  color: #fff;
-  font-weight: 600;
+.choice.selected{
+  background: var(--selected-bg);
+  border-color: var(--selected-border);
+}
+
+.footer{
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.next{
+  padding: 12px 16px;
+  border-radius: 12px;
   border: none;
+  background: var(--primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-#continue:hover {
-  background: #000;
+.next:hover{
+  background: var(--primary-dark);
 }
 
-#continue:disabled {
-  background: #bbb;
+.next:disabled{
+  background: #c7d2fe;
   cursor: not-allowed;
+}
+
+.result{
+  margin-top: 10px;
+}
+
+.winner{
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.winner-pill{
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  color: #14532d;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.scores{
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 16px 0;
+}
+
+.score-row{
+  display: grid;
+  grid-template-columns: 160px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+}
+
+.score-label{
+  font-size: 14px;
+  color: var(--text);
+}
+
+.score-bar{
+  height: 12px;
+  background: #eef2f7;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.score-fill{
+  height: 100%;
+  background: var(--primary);
+  width: 0%;
+}
+
+.winner-row .score-fill{
+  background: var(--winner);
+}
+
+.score-pct{
+  text-align: right;
+  font-weight: 700;
+}
+
+.explain{
+  margin-top: 12px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: #111827;
+  line-height: 1.45;
+}
+
+.restart{
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.restart:hover{
+  background: #f3f4f6;
+}
+
+@media (min-width: 720px){
+  .btn-grid{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  /* For word pairs (2 options), it will just leave the 3rd slot empty visually */
+  .choice{
+    text-align: center;
+  }
 }
