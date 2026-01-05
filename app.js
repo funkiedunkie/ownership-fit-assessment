@@ -408,12 +408,13 @@ function scoreAssessment() {
   return { raw, fit, first, second, gap, explanation };
 }
 
-function renderScoreRow(label, pct, isWinner) {
+function renderScoreRow(label, pct, isWinner, maxPct) {
+  const rel = maxPct > 0 ? Math.round((pct / maxPct) * 100) : 0; // winner becomes 100
   return `
-    <div class="score-row ${isWinner ? "winner-row" : ""}">
+    <div class="score-row ${isWinner ? "winner-row" : "secondary-row"}">
       <div class="score-label">${label}</div>
       <div class="score-bar">
-        <div class="score-fill" style="width:${pct}%"></div>
+        <div class="score-fill" style="width:${rel}%"></div>
       </div>
       <div class="score-pct">${pct}</div>
     </div>
@@ -429,15 +430,14 @@ function renderResults() {
   const f = result.fit.Franchise;
   const e = result.fit.Existing;
   const s = result.fit.Startup;
-
+  const maxPct = Math.max(f, e, s);
   const bars = `
     <div class="scores">
-      ${renderScoreRow("Franchise", f, winner === "Franchise")}
-      ${renderScoreRow("Existing Business", e, winner === "Existing")}
-      ${renderScoreRow("Startup", s, winner === "Startup")}
-    </div>
-  `;
-
+    ${renderScoreRow("Franchise", f, winner === "Franchise", maxPct)}
+    ${renderScoreRow("Existing Business", e, winner === "Existing", maxPct)}
+    ${renderScoreRow("Startup", s, winner === "Startup", maxPct)}
+  </div>
+`;
   const inner = `
     <div class="result">
       <div class="winner">Best Fit: <span class="winner-pill">${winnerLabel}</span></div>
