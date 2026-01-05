@@ -81,6 +81,7 @@ h2{
   margin-top: 14px;
 }
 
+/* Default choices (word pages + scenarios) */
 .btn-grid{
   display: grid;
   grid-template-columns: 1fr;
@@ -141,6 +142,30 @@ h2{
   cursor: not-allowed;
 }
 
+/* VS pair layout */
+.pair-wrap{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.choice.pair{
+  text-align: center;
+}
+
+.vs{
+  font-weight: 800;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  text-align: center;
+}
+
+/* Results */
 .result{
   margin-top: 10px;
 }
@@ -230,8 +255,8 @@ h2{
   .btn-grid{
     grid-template-columns: 1fr 1fr 1fr;
   }
-  /* For word pairs (2 options), it will just leave the 3rd slot empty visually */
   .choice{
     text-align: center;
   }
+  /* keep VS pair as 2 buttons + VS always */
 }
