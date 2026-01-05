@@ -207,7 +207,7 @@ h2{
 
 .score-bar{
   height: 12px;
-  background: #eef2f7;
+  background: transparent; /* removes the "missing" grey */
   border: 1px solid var(--border);
   border-radius: 999px;
   overflow: hidden;
@@ -217,6 +217,15 @@ h2{
   height: 100%;
   background: var(--primary);
   width: 0%;
+}
+/* winner bar */
+.winner-row .score-fill{
+  background: var(--winner);
+}
+
+/* non-winner bars */
+.secondary-row .score-fill{
+  background: #9ca3af;
 }
 
 .winner-row .score-fill{
