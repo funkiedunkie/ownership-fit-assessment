@@ -19,12 +19,10 @@ function median(nums) {
 }
 
 function timingWeight(ms, med) {
-  // Relative to the user's own median.
-  // Mild influence to sharpen signal without penalizing thoughtful people.
   if (!med || med <= 0) return 1.0;
-  if (ms <= med * 0.9) return 1.15;   // faster than their norm
-  if (ms >= med * 1.1) return 0.85;   // slower than their norm
-  return 1.0;                         // near their norm
+  if (ms <= med * 0.9) return 1.15;
+  if (ms >= med * 1.1) return 0.85;
+  return 1.0;
 }
 
 function normalizeTo100(raw) {
@@ -35,11 +33,9 @@ function normalizeTo100(raw) {
   let e = Math.round((raw.Existing / total) * 100);
   let s = Math.round((raw.Startup / total) * 100);
 
-  // Fix rounding so sum is exactly 100
   let sum = f + e + s;
   if (sum !== 100) {
     const diff = 100 - sum;
-    // Add/subtract from the highest bucket to keep things stable
     const entries = [
       { k: "Franchise", v: f },
       { k: "Existing", v: e },
@@ -90,7 +86,11 @@ const scenarios = [
   },
   {
     prompt: "When I believe an existing process can be improved, I typically feel:",
-    options: ["Constrained", "Accepting", "Engaged"]
+    options: [
+      "Accepting (I’ll work within it and move on)",
+      "Engaged (I want the freedom to adjust it)",
+      "Constrained (I want to rethink it entirely)"
+    ]
   },
   {
     prompt: "When the long-term vision is already defined for me, I feel:",
@@ -146,22 +146,24 @@ const choiceMap = new Map([
 
   // Scenarios
   ["Comfortable", "Franchise"],
-  ["Accepting", "Franchise"],
   ["Reassured", "Franchise"],
   ["Aligned", "Franchise"],
   ["Cautious", "Franchise"],
 
   ["Evaluative", "Existing"],
-  ["Engaged", "Existing"],
   ["Neutral", "Existing"],
   ["Selective", "Existing"],
   ["Interested", "Existing"],
 
   ["Uninspired", "Startup"],
-  ["Constrained", "Startup"],
   ["Disconnected", "Startup"],
   ["Resistant", "Startup"],
-  ["Compelled", "Startup"]
+  ["Compelled", "Startup"],
+
+  // Scenario 2 (with parenthetical text)
+  ["Accepting (I’ll work within it and move on)", "Franchise"],
+  ["Engaged (I want the freedom to adjust it)", "Existing"],
+  ["Constrained (I want to rethink it entirely)", "Startup"]
 ]);
 
 /* ---------- EXPLANATIONS ---------- */
@@ -195,14 +197,13 @@ const state = {
   stepIndex: 0,
   totalSteps: wordPages.length + wordPairs.length + scenarios.length,
 
-  // responses
-  wordChoices: [],       // 4
-  wordTimes: [],         // 4
+  wordChoices: [],
+  wordTimes: [],
 
-  pairChoices: [],       // 8
-  pairTimes: [],         // 8
+  pairChoices: [],
+  pairTimes: [],
 
-  scenarioChoices: []    // 5
+  scenarioChoices: []
 };
 
 /* ---------- UI ---------- */
@@ -241,11 +242,37 @@ function renderChoiceButtons(options) {
   `;
 }
 
+function renderVsPair(left, right) {
+  return `
+    <div class="pair-wrap">
+      <button class="choice pair" data-side="left">${left}</button>
+      <div class="vs">VS.</div>
+      <button class="choice pair" data-side="right">${right}</button>
+    </div>
+  `;
+}
+
 /* ---------- FLOW ---------- */
 
 function start() {
   state.stepIndex = 0;
   renderWordPage(0);
+}
+
+function attachChoiceSelection(onSelect) {
+  let selected = null;
+
+  document.querySelectorAll(".choice").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".choice").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selected = btn.textContent.trim();
+      document.getElementById("next").disabled = false;
+      onSelect(selected);
+    });
+  });
+
+  return () => selected;
 }
 
 function renderWordPage(pageIdx) {
@@ -259,19 +286,11 @@ function renderWordPage(pageIdx) {
     "",
     renderChoiceButtons(options),
     false,
-    pageIdx === wordPages.length - 1 ? "Next" : "Next"
+    "Next"
   );
 
   let selected = null;
-
-  document.querySelectorAll(".choice").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".choice").forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
-      selected = btn.textContent.trim();
-      document.getElementById("next").disabled = false;
-    });
-  });
+  attachChoiceSelection((s) => { selected = s; });
 
   document.getElementById("next").addEventListener("click", () => {
     const elapsed = performance.now() - startTime;
@@ -290,27 +309,22 @@ function renderPair(pairIdx) {
   state.stepIndex += 1;
 
   const pair = wordPairs[pairIdx];
-  const options = shuffle(pair); // randomize left/right
+  const opts = shuffle(pair); // randomize left/right
+  const left = opts[0];
+  const right = opts[1];
+
   const startTime = performance.now();
 
   renderShell(
     "Which word or phrase dominates?",
     "",
-    renderChoiceButtons(options.map(o => o)), // two buttons
+    renderVsPair(left, right),
     false,
     pairIdx === wordPairs.length - 1 ? "Next" : "Next"
   );
 
   let selected = null;
-
-  document.querySelectorAll(".choice").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".choice").forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
-      selected = btn.textContent.trim();
-      document.getElementById("next").disabled = false;
-    });
-  });
+  attachChoiceSelection((s) => { selected = s; });
 
   document.getElementById("next").addEventListener("click", () => {
     const elapsed = performance.now() - startTime;
@@ -340,15 +354,7 @@ function renderScenario(sIdx) {
   );
 
   let selected = null;
-
-  document.querySelectorAll(".choice").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".choice").forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
-      selected = btn.textContent.trim();
-      document.getElementById("next").disabled = false;
-    });
-  });
+  attachChoiceSelection((s) => { selected = s; });
 
   document.getElementById("next").addEventListener("click", () => {
     state.scenarioChoices.push(selected);
@@ -369,23 +375,18 @@ function scoreAssessment() {
   const medWord = median(state.wordTimes);
   const medPair = median(state.pairTimes);
 
-  // Words (timed, relative)
   state.wordChoices.forEach((choice, i) => {
     const archetype = choiceMap.get(choice);
     if (!archetype) return;
-    const w = timingWeight(state.wordTimes[i], medWord);
-    raw[archetype] += 1 * w;
+    raw[archetype] += 1 * timingWeight(state.wordTimes[i], medWord);
   });
 
-  // Pairs (timed, relative)
   state.pairChoices.forEach((choice, i) => {
     const archetype = choiceMap.get(choice);
     if (!archetype) return;
-    const w = timingWeight(state.pairTimes[i], medPair);
-    raw[archetype] += 1 * w;
+    raw[archetype] += 1 * timingWeight(state.pairTimes[i], medPair);
   });
 
-  // Scenarios (untimed)
   state.scenarioChoices.forEach(choice => {
     const archetype = choiceMap.get(choice);
     if (!archetype) return;
@@ -395,10 +396,7 @@ function scoreAssessment() {
   const fit = normalizeTo100(raw);
   const { first, second, gap } = topTwo(fit);
 
-  // Explanation selection
-  const STRONG_GAP = 20;   // strong lean
-  const CLOSE_GAP = 10;    // winner exists, but second is close if gap < 10
-
+  const STRONG_GAP = 20;
   let explanation = "";
   if (gap >= STRONG_GAP) {
     explanation = explainStrong[first.k];
@@ -408,6 +406,18 @@ function scoreAssessment() {
   }
 
   return { raw, fit, first, second, gap, explanation };
+}
+
+function renderScoreRow(label, pct, isWinner) {
+  return `
+    <div class="score-row ${isWinner ? "winner-row" : ""}">
+      <div class="score-label">${label}</div>
+      <div class="score-bar">
+        <div class="score-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="score-pct">${pct}</div>
+    </div>
+  `;
 }
 
 function renderResults() {
@@ -437,14 +447,12 @@ function renderResults() {
     </div>
   `;
 
-  // stepIndex shows completed state
   state.stepIndex = state.totalSteps;
 
   renderShell("Your Fit Score", "", inner, true, "Done");
   document.getElementById("next").style.display = "none";
 
   document.getElementById("restart").addEventListener("click", () => {
-    // reset
     state.stepIndex = 0;
     state.wordChoices = [];
     state.wordTimes = [];
@@ -453,21 +461,6 @@ function renderResults() {
     state.scenarioChoices = [];
     start();
   });
-
-  // Debug if you want:
-  // console.log(result);
-}
-
-function renderScoreRow(label, pct, isWinner) {
-  return `
-    <div class="score-row ${isWinner ? "winner-row" : ""}">
-      <div class="score-label">${label}</div>
-      <div class="score-bar">
-        <div class="score-fill" style="width:${pct}%"></div>
-      </div>
-      <div class="score-pct">${pct}</div>
-    </div>
-  `;
 }
 
 /* ---------- START ---------- */
