@@ -58,51 +58,62 @@ function topTwo(normalized) {
 
 /* ---------- ASSESSMENT DATA ---------- */
 
-// 4 pages, 3 choices each
+// 2 pages, 3 choices each
 const wordPages = [
-  ["Visionary", "Reliable", "Practical"],
-  ["Experimental", "Consistent", "Adaptive"],
-  ["Independent", "Structured", "Decisive"],
-  ["Opportunistic", "Patient", "Iterative"]
+  ["Reliable", "Practical", "Experimental"],
+  ["Consistent", "Collaborative", "Exploratory"]
 ];
 
-// 8 pairs
+// 6 pairs
 const wordPairs = [
-  ["Execute", "Shape"],
-  ["Proven", "Adaptable"],
-  ["Clear rules", "Judgment"],
-  ["Consistent", "Evolving"],
-  ["Adopt", "Invent"],
-  ["Stable", "Directional"],
+  ["Predictable", "Flexible"],
+  ["Steady", "Opportunistic"],
+  ["Reliable", "Experimental"],
+  ["Consistent", "Adaptive"],
   ["Follow the process", "Own the process"],
-  ["Refine", "Reimagine"]
+  ["Tested", "Exploratory"]
 ];
 
-// 5 scenarios
+// 4 scenarios
 const scenarios = [
   {
     prompt: "When a well-documented process already exists, I feel:",
-    options: ["Uninspired", "Comfortable", "Evaluative"]
+    options: ["Comfortable", "Evaluative", "Uninspired"]
   },
   {
-    prompt: "When I believe an existing process can be improved, I typically feel:",
-    options: [
-      "Accepting\n(Work within & move on)",
-      "Engaged\n(Freedom to adjust it)",
-      "Constrained\n(Want to rethink it)"
-    ]
+    prompt: "When decisions are made for me by a larger system or organization, I tend to:",
+    options: ["Appreciate the clarity", "Evaluate whether they can be improved", "Resist and want autonomy"]
   },
   {
-    prompt: "When the long-term vision is already defined for me, I feel:",
-    options: ["Neutral", "Disconnected", "Reassured"]
-  },
-  {
-    prompt: "When important decisions are made above me, I feel:",
-    options: ["Selective", "Aligned", "Resistant"]
+    prompt: "When building something from scratch, I feel:",
+    options: ["Energized", "Curious but cautious", "Prefer to improve what exists"]
   },
   {
     prompt: "When there’s an opportunity to create something new, I feel:",
-    options: ["Interested", "Compelled", "Cautious"]
+    options: ["Cautious", "Interested", "Compelled"]
+  }
+];
+// 3 stage questions
+const stageQuestions = [
+  {
+    prompt: "At this stage of my life, I’m most interested in:",
+    options: [
+      "Building something that demands intense personal involvement",
+      "Improving and scaling something that already works",
+      "Owning something stable that runs without me daily"
+    ]
+  },
+  {
+    prompt: "Over the next 3–5 years, I’m most willing to trade:",
+    options: [
+      "Time and intensity for upside",
+      "Focused effort for steady improvement",
+      "Capital for predictability"
+    ]
+  },
+  {
+    prompt: "Compared to earlier in my career, my tolerance for sustained uncertainty is:",
+    options: ["Higher", "About the same", "Lower"]
   }
 ];
 
@@ -362,7 +373,7 @@ function renderScenario(sIdx) {
     if (sIdx < scenarios.length - 1) {
       renderScenario(sIdx + 1);
     } else {
-      renderResults();
+      renderStage(0);
     }
   });
 }
