@@ -58,10 +58,10 @@ const wordPages = [
 const wordPairs = [
   ["Predictable", "Flexible"],
   ["Steady", "Opportunistic"],
-  ["Reliable", "Experimental"],
-  ["Consistent", "Adaptive"],
+  ["Dependable", "Innovative"],
+  ["Structured", "Adaptive"],
   ["Follow the process", "Own the process"],
-  ["Tested", "Exploratory"]
+  ["Proven", "Pioneering"]
 ];
 
 const scenarios = [
@@ -82,14 +82,14 @@ const scenarios = [
     options: ["Energized", "Curious but cautious", "Prefer to improve what exists"]
   },
   {
-    prompt: "When there’s an opportunity to create something new, I feel:",
+    prompt: "When there's an opportunity to create something new, I feel:",
     options: ["Cautious", "Interested", "Compelled"]
   }
 ];
 
 const stageQuestions = [
   {
-    prompt: "At this stage of my life, I’m most interested in:",
+    prompt: "At this stage of my life, I'm most interested in:",
     options: [
       "Building something that demands intense personal involvement",
       "Improving and scaling something that already works",
@@ -97,7 +97,7 @@ const stageQuestions = [
     ]
   },
   {
-    prompt: "Over the next 3–5 years, I’m most willing to trade:",
+    prompt: "Over the next 3–5 years, I'm most willing to trade:",
     options: [
       "Time and intensity for upside",
       "Focused effort for steady improvement",
@@ -120,8 +120,10 @@ const choiceMap = new Map([
 
   ["Predictable", "Franchise"],
   ["Steady", "Franchise"],
+  ["Dependable", "Franchise"],
+  ["Structured", "Franchise"],
   ["Follow the process", "Franchise"],
-  ["Tested", "Franchise"],
+  ["Proven", "Franchise"],
 
   ["Flexible", "Existing"],
   ["Opportunistic", "Existing"],
@@ -131,15 +133,19 @@ const choiceMap = new Map([
   ["Comfortable", "Franchise"],
   ["Appreciate the clarity", "Franchise"],
   ["Cautious", "Franchise"],
+  ["Prefer to improve what exists", "Existing"],
 
   ["Evaluative", "Existing"],
   ["Evaluate whether they can be improved", "Existing"],
   ["Interested", "Existing"],
+  ["Curious but cautious", "Existing"],
 
   ["Uninspired", "Startup"],
   ["Resist and want autonomy", "Startup"],
   ["Compelled", "Startup"],
-  ["Energized", "Startup"]
+  ["Energized", "Startup"],
+  ["Innovative", "Startup"],
+  ["Pioneering", "Startup"]
 ]);
 
 /* ---------- STATE ---------- */
@@ -273,6 +279,40 @@ function renderStage(idx) {
 
 /* ---------- SCORING ---------- */
 
+function calculateScores() {
+  const raw = { Franchise: 0, Existing: 0, Startup: 0 };
+
+  // Word choices - base weight of 1.0
+  state.wordChoices.forEach(choice => {
+    const bucket = choiceMap.get(choice);
+    if (bucket) raw[bucket] += 1.0;
+  });
+
+  // Pair choices - weighted by timing
+  const medianPairTime = median(state.pairTimes);
+  state.pairChoices.forEach((choice, i) => {
+    const bucket = choiceMap.get(choice);
+    if (bucket) {
+      const weight = timingWeight(state.pairTimes[i], medianPairTime);
+      raw[bucket] += weight;
+    }
+  });
+
+  // Scenario choices - weight of 1.5
+  state.scenarioChoices.forEach(choice => {
+    const bucket = choiceMap.get(choice);
+    if (bucket) raw[bucket] += 1.5;
+  });
+
+  // Normalize to 100%
+  let normalized = normalizeTo100(raw);
+
+  // Apply stage modifier
+  normalized = applyStageModifier(normalized);
+
+  return normalized;
+}
+
 function applyStageModifier(fit) {
   let { Franchise, Existing, Startup } = fit;
 
@@ -350,6 +390,59 @@ function applyStageModifier(fit) {
   });
 }
 
+function getExplanation(winner, scores) {
+  const explanations = {
+    Franchise: `You show a strong preference for proven systems and predictable structures. Franchise ownership may offer you the reliability and tested processes that align with your working style.`,
+    Existing: `You balance structured processes with creative problem-solving. Acquiring an existing business may give you the foundation to improve and scale while maintaining operational clarity.`,
+    Startup: `You thrive on autonomy and building from the ground up. Starting a new venture may channel your entrepreneurial energy and desire for creative control.`
+  };
+
+  const { first, second, gap } = topTwo(scores);
+  
+  let explanation = explanations[winner];
+  
+  if (gap < 10) {
+    explanation += ` That said, your scores are quite close between ${first.k} (${first.v}%) and ${second.k} (${second.v}%), suggesting you may find success in multiple pathways.`;
+  }
+
+  return explanation;
+}
+
+function renderResults() {
+  const scores = calculateScores();
+  const { first, second } = topTwo(scores);
+  const winner = first.k;
+  const explanation = getExplanation(winner, scores);
+
+  const html = `
+    <div class="result">
+      <div class="winner">
+        Your best fit: <span class="winner-pill">${winner}</span>
+      </div>
+      
+      <div class="scores">
+        ${Object.entries(scores)
+          .sort((a, b) => b[1] - a[1])
+          .map(([type, pct], idx) => `
+            <div class="score-row ${idx === 0 ? 'winner-row' : 'secondary-row'}">
+              <div class="score-label">${type}</div>
+              <div class="score-bar">
+                <div class="score-fill" style="width: ${pct}%"></div>
+              </div>
+              <div class="score-pct">${pct}%</div>
+            </div>
+          `).join('')}
+      </div>
+
+      <div class="explain">${explanation}</div>
+
+      <button class="restart" onclick="location.reload()">Take Again</button>
+    </div>
+  `;
+
+  renderShell("Your Ownership Fit Profile", html, false, "");
+  document.querySelector('.footer').style.display = 'none';
+}
 
 /* ---------- START ---------- */
 
