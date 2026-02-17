@@ -15,7 +15,9 @@ function median(nums) {
   if (!nums.length) return 0;
   const sorted = [...nums].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return sorted.length % 2
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 function timingWeight(ms, med) {
@@ -56,15 +58,13 @@ function topTwo(normalized) {
   return { first: arr[0], second: arr[1], gap: arr[0].v - arr[1].v };
 }
 
-/* ---------- ASSESSMENT DATA ---------- */
+/* ---------- DATA ---------- */
 
-// 2 pages, 3 choices each
 const wordPages = [
   ["Reliable", "Practical", "Experimental"],
   ["Consistent", "Collaborative", "Exploratory"]
 ];
 
-// 6 pairs
 const wordPairs = [
   ["Predictable", "Flexible"],
   ["Steady", "Opportunistic"],
@@ -74,7 +74,6 @@ const wordPairs = [
   ["Tested", "Exploratory"]
 ];
 
-// 4 scenarios
 const scenarios = [
   {
     prompt: "When a well-documented process already exists, I feel:",
@@ -82,7 +81,11 @@ const scenarios = [
   },
   {
     prompt: "When decisions are made for me by a larger system or organization, I tend to:",
-    options: ["Appreciate the clarity", "Evaluate whether they can be improved", "Resist and want autonomy"]
+    options: [
+      "Appreciate the clarity",
+      "Evaluate whether they can be improved",
+      "Resist and want autonomy"
+    ]
   },
   {
     prompt: "When building something from scratch, I feel:",
@@ -93,7 +96,7 @@ const scenarios = [
     options: ["Cautious", "Interested", "Compelled"]
   }
 ];
-// 3 stage questions
+
 const stageQuestions = [
   {
     prompt: "At this stage of my life, I’m most interested in:",
@@ -117,107 +120,60 @@ const stageQuestions = [
   }
 ];
 
-// Choice → archetype mapping (by STRING, order-independent)
 const choiceMap = new Map([
-  // Word pages
   ["Reliable", "Franchise"],
   ["Consistent", "Franchise"],
-  ["Structured", "Franchise"],
-  ["Patient", "Franchise"],
-
   ["Practical", "Existing"],
-  ["Adaptive", "Existing"],
-  ["Decisive", "Existing"],
-  ["Iterative", "Existing"],
-
-  ["Visionary", "Startup"],
+  ["Collaborative", "Existing"],
   ["Experimental", "Startup"],
-  ["Independent", "Startup"],
-  ["Opportunistic", "Startup"],
+  ["Exploratory", "Startup"],
 
-  // Word pairs
-  ["Execute", "Franchise"],
-  ["Proven", "Franchise"],
-  ["Clear rules", "Franchise"],
-  ["Consistent", "Franchise"],
-  ["Adopt", "Franchise"],
-  ["Stable", "Franchise"],
+  ["Predictable", "Franchise"],
+  ["Steady", "Franchise"],
   ["Follow the process", "Franchise"],
+  ["Tested", "Franchise"],
 
-  ["Shape", "Existing"],
-  ["Adaptable", "Existing"],
-  ["Judgment", "Existing"],
-  ["Evolving", "Existing"],
-  ["Refine", "Existing"],
+  ["Flexible", "Existing"],
+  ["Opportunistic", "Existing"],
+  ["Adaptive", "Existing"],
   ["Own the process", "Existing"],
 
-  ["Invent", "Startup"],
-  ["Directional", "Startup"],
-  ["Reimagine", "Startup"],
+  ["Experimental", "Startup"],
+  ["Exploratory", "Startup"],
 
-  // Scenarios
   ["Comfortable", "Franchise"],
-  ["Reassured", "Franchise"],
-  ["Aligned", "Franchise"],
+  ["Appreciate the clarity", "Franchise"],
   ["Cautious", "Franchise"],
 
   ["Evaluative", "Existing"],
-  ["Neutral", "Existing"],
-  ["Selective", "Existing"],
+  ["Evaluate whether they can be improved", "Existing"],
   ["Interested", "Existing"],
 
   ["Uninspired", "Startup"],
-  ["Disconnected", "Startup"],
-  ["Resistant", "Startup"],
+  ["Resist and want autonomy", "Startup"],
   ["Compelled", "Startup"],
-
-  // Scenario 2 (with parenthetical text)
-  ["Accepting (I’ll work within it and move on)", "Franchise"],
-  ["Engaged (I want the freedom to adjust it)", "Existing"],
-  ["Constrained (I want to rethink it entirely)", "Startup"]
+  ["Energized", "Startup"]
 ]);
-
-/* ---------- EXPLANATIONS ---------- */
-
-const explainStrong = {
-  Franchise:
-    "Your responses strongly suggest that you’re best suited for an environment with clear expectations, proven systems, and defined processes. You tend to perform at your best when the playbook is established and success comes from disciplined execution rather than reinvention.",
-  Existing:
-    "Your responses indicate a strong fit for owning and improving an existing business. You’re comfortable working within established systems, but you value the freedom to refine, adapt, and improve them when necessary. This balance of structure and autonomy tends to bring out your best work.",
-  Startup:
-    "Your responses show a strong preference for environments where you own the vision from the outset. You’re energized by creating direction, building from scratch, and shaping how things work. Operating inside someone else’s fixed framework is likely to feel limiting over time."
-};
-
-const explainClose = {
-  Franchise:
-    "Your tendency appears to be toward a franchise-style environment, where structure and proven systems support consistent execution. That said, your responses also suggest you may have developed skills to be successful as {SECOND}.",
-  Existing:
-    "Your strongest fit points toward owning an existing business, where you can work with established systems while still exercising judgment and control. At the same time, your profile suggests you may have developed skills to be successful as {SECOND}.",
-  Startup:
-    "Your results lean toward a startup-style environment, where owning the vision and shaping direction are central. However, your responses also indicate you may have developed skills to be successful as {SECOND}."
-};
-
-function archetypeLabel(k) {
-  if (k === "Existing") return "Existing Business";
-  return k;
-}
 
 /* ---------- STATE ---------- */
 
 const state = {
   stepIndex: 0,
-  totalSteps: wordPages.length + wordPairs.length + scenarios.length,
+  totalSteps:
+    wordPages.length +
+    wordPairs.length +
+    scenarios.length +
+    stageQuestions.length,
 
   wordChoices: [],
   wordTimes: [],
-
   pairChoices: [],
   pairTimes: [],
-
-  scenarioChoices: []
+  scenarioChoices: [],
+  stageChoices: []
 };
 
-/* ---------- UI ---------- */
+/* ---------- UI HELPERS ---------- */
 
 function renderShell(title, subtitle, innerHtml, nextEnabled = false, nextText = "Next") {
   const progressPct = Math.round((state.stepIndex / state.totalSteps) * 100);
@@ -225,19 +181,14 @@ function renderShell(title, subtitle, innerHtml, nextEnabled = false, nextText =
   app.innerHTML = `
     <div class="card">
       <div class="header">
-        <div class="progress-wrap" aria-label="Progress">
+        <div class="progress-wrap">
           <div class="progress" style="width:${progressPct}%"></div>
         </div>
         <div class="step">${state.stepIndex} / ${state.totalSteps}</div>
       </div>
-
       <h2>${title}</h2>
       ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ""}
-
-      <div class="content">
-        ${innerHtml}
-      </div>
-
+      <div class="content">${innerHtml}</div>
       <div class="footer">
         <button id="next" class="next" ${nextEnabled ? "" : "disabled"}>${nextText}</button>
       </div>
@@ -248,7 +199,7 @@ function renderShell(title, subtitle, innerHtml, nextEnabled = false, nextText =
 function renderChoiceButtons(options) {
   return `
     <div class="btn-grid">
-      ${options.map((opt, idx) => `<button class="choice" data-idx="${idx}">${opt}</button>`).join("")}
+      ${options.map(opt => `<button class="choice">${opt}</button>`).join("")}
     </div>
   `;
 }
@@ -256,23 +207,15 @@ function renderChoiceButtons(options) {
 function renderVsPair(left, right) {
   return `
     <div class="pair-wrap">
-      <button class="choice pair" data-side="left">${left}</button>
+      <button class="choice pair">${left}</button>
       <div class="vs">VS.</div>
-      <button class="choice pair" data-side="right">${right}</button>
+      <button class="choice pair">${right}</button>
     </div>
   `;
 }
 
-/* ---------- FLOW ---------- */
-
-function start() {
-  state.stepIndex = 0;
-  renderWordPage(0);
-}
-
 function attachChoiceSelection(onSelect) {
   let selected = null;
-
   document.querySelectorAll(".choice").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".choice").forEach(b => b.classList.remove("selected"));
@@ -282,103 +225,137 @@ function attachChoiceSelection(onSelect) {
       onSelect(selected);
     });
   });
-
   return () => selected;
 }
 
-function renderWordPage(pageIdx) {
-  state.stepIndex += 1;
+/* ---------- FLOW ---------- */
 
-  const options = shuffle(wordPages[pageIdx]);
+function start() {
+  state.stepIndex = 0;
+  renderWordPage(0);
+}
+
+function renderWordPage(idx) {
+  state.stepIndex++;
+  const options = shuffle(wordPages[idx]);
   const startTime = performance.now();
 
-  renderShell(
-    "Pick the word that best describes you.",
-    "",
-    renderChoiceButtons(options),
-    false,
-    "Next"
-  );
+  renderShell("Pick the word that best describes you.", "", renderChoiceButtons(options));
 
   let selected = null;
-  attachChoiceSelection((s) => { selected = s; });
+  attachChoiceSelection(s => selected = s);
 
   document.getElementById("next").addEventListener("click", () => {
-    const elapsed = performance.now() - startTime;
     state.wordChoices.push(selected);
-    state.wordTimes.push(elapsed);
-
-    if (pageIdx < wordPages.length - 1) {
-      renderWordPage(pageIdx + 1);
-    } else {
-      renderPair(0);
-    }
+    state.wordTimes.push(performance.now() - startTime);
+    idx < wordPages.length - 1 ? renderWordPage(idx + 1) : renderPair(0);
   });
 }
 
-function renderPair(pairIdx) {
-  state.stepIndex += 1;
-
-  const pair = wordPairs[pairIdx];
-  const opts = shuffle(pair); // randomize left/right
-  const left = opts[0];
-  const right = opts[1];
-
+function renderPair(idx) {
+  state.stepIndex++;
+  const pair = shuffle(wordPairs[idx]);
   const startTime = performance.now();
 
-  renderShell(
-    "Which word or phrase dominates?",
-    "",
-    renderVsPair(left, right),
-    false,
-    pairIdx === wordPairs.length - 1 ? "Next" : "Next"
-  );
+  renderShell("Which word or phrase dominates?", "", renderVsPair(pair[0], pair[1]));
 
   let selected = null;
-  attachChoiceSelection((s) => { selected = s; });
+  attachChoiceSelection(s => selected = s);
 
   document.getElementById("next").addEventListener("click", () => {
-    const elapsed = performance.now() - startTime;
     state.pairChoices.push(selected);
-    state.pairTimes.push(elapsed);
-
-    if (pairIdx < wordPairs.length - 1) {
-      renderPair(pairIdx + 1);
-    } else {
-      renderScenario(0);
-    }
+    state.pairTimes.push(performance.now() - startTime);
+    idx < wordPairs.length - 1 ? renderPair(idx + 1) : renderScenario(0);
   });
 }
 
-function renderScenario(sIdx) {
-  state.stepIndex += 1;
-
-  const s = scenarios[sIdx];
+function renderScenario(idx) {
+  state.stepIndex++;
+  const s = scenarios[idx];
   const options = shuffle(s.options);
 
-  renderShell(
-    s.prompt,
-    "",
-    renderChoiceButtons(options),
-    false,
-    sIdx === scenarios.length - 1 ? "See Results" : "Next"
-  );
+  renderShell(s.prompt, "", renderChoiceButtons(options));
 
   let selected = null;
-  attachChoiceSelection((s) => { selected = s; });
+  attachChoiceSelection(s => selected = s);
 
   document.getElementById("next").addEventListener("click", () => {
     state.scenarioChoices.push(selected);
+    idx < scenarios.length - 1 ? renderScenario(idx + 1) : renderStage(0);
+  });
+}
 
-    if (sIdx < scenarios.length - 1) {
-      renderScenario(sIdx + 1);
-    } else {
-      renderStage(0);
-    }
+function renderStage(idx) {
+  state.stepIndex++;
+  const q = stageQuestions[idx];
+  const options = shuffle(q.options);
+
+  renderShell(q.prompt, "", renderChoiceButtons(options), false,
+    idx === stageQuestions.length - 1 ? "See Results" : "Next");
+
+  let selected = null;
+  attachChoiceSelection(s => selected = s);
+
+  document.getElementById("next").addEventListener("click", () => {
+    state.stageChoices.push(selected);
+    idx < stageQuestions.length - 1 ? renderStage(idx + 1) : renderResults();
   });
 }
 
 /* ---------- SCORING ---------- */
+
+function applyStageModifier(fit) {
+  let { Franchise, Existing, Startup } = fit;
+
+  const sorted = Object.entries(fit)
+    .map(([k, v]) => ({ k, v }))
+    .sort((a, b) => b.v - a.v);
+
+  const top = sorted[0];
+  const second = sorted[1];
+
+  if (
+    !(top.k === "Startup" ||
+      (second.k === "Startup" && Math.abs(top.v - second.v) <= 5))
+  ) return fit;
+
+  let intensity = 0;
+  state.stageChoices.forEach(choice => {
+    if (
+      choice.includes("intense") ||
+      choice.includes("Time and intensity") ||
+      choice === "Higher"
+    ) intensity += 1;
+    if (
+      choice.includes("stable") ||
+      choice.includes("Capital for predictability") ||
+      choice === "Lower"
+    ) intensity -= 1;
+  });
+
+  if (intensity >= 0) return fit;
+
+  const reduction = (Math.abs(intensity) / 3) * 0.2;
+  const delta = Startup * reduction;
+  const newStartup = Startup - delta;
+
+  const otherTotal = Franchise + Existing;
+  let newFranchise = Franchise;
+  let newExisting = Existing;
+
+  if (otherTotal > 0) {
+    newFranchise += delta * (Franchise / otherTotal);
+    newExisting += delta * (Existing / otherTotal);
+  } else {
+    newExisting += delta;
+  }
+
+  return normalizeTo100({
+    Franchise: newFranchise,
+    Existing: newExisting,
+    Startup: newStartup
+  });
+}
 
 function scoreAssessment() {
   const raw = { Franchise: 0, Existing: 0, Startup: 0 };
@@ -386,92 +363,43 @@ function scoreAssessment() {
   const medWord = median(state.wordTimes);
   const medPair = median(state.pairTimes);
 
-  state.wordChoices.forEach((choice, i) => {
-    const archetype = choiceMap.get(choice);
-    if (!archetype) return;
-    raw[archetype] += 1 * timingWeight(state.wordTimes[i], medWord);
+  state.wordChoices.forEach((c, i) => {
+    const a = choiceMap.get(c);
+    if (a) raw[a] += timingWeight(state.wordTimes[i], medWord);
   });
 
-  state.pairChoices.forEach((choice, i) => {
-    const archetype = choiceMap.get(choice);
-    if (!archetype) return;
-    raw[archetype] += 1 * timingWeight(state.pairTimes[i], medPair);
+  state.pairChoices.forEach((c, i) => {
+    const a = choiceMap.get(c);
+    if (a) raw[a] += timingWeight(state.pairTimes[i], medPair);
   });
 
-  state.scenarioChoices.forEach(choice => {
-    const archetype = choiceMap.get(choice);
-    if (!archetype) return;
-    raw[archetype] += 1;
+  state.scenarioChoices.forEach(c => {
+    const a = choiceMap.get(c);
+    if (a) raw[a] += 1;
   });
 
-  const fit = normalizeTo100(raw);
+  let fit = normalizeTo100(raw);
+  fit = applyStageModifier(fit);
+
   const { first, second, gap } = topTwo(fit);
 
-  const STRONG_GAP = 20;
-  let explanation = "";
-  if (gap >= STRONG_GAP) {
-    explanation = explainStrong[first.k];
-  } else {
-    const secondLabel = archetypeLabel(second.k);
-    explanation = explainClose[first.k].replace("{SECOND}", secondLabel);
-  }
-
-  return { raw, fit, first, second, gap, explanation };
-}
-
-function renderScoreRow(label, pct, isWinner, maxPct) {
-  const rel = maxPct > 0 ? Math.round((pct / maxPct) * 100) : 0; // winner becomes 100
-  return `
-    <div class="score-row ${isWinner ? "winner-row" : "secondary-row"}">
-      <div class="score-label">${label}</div>
-      <div class="score-bar">
-        <div class="score-fill" style="width:${rel}%"></div>
-      </div>
-      <div class="score-pct">${pct}</div>
-    </div>
-  `;
+  return { fit, first, second, gap };
 }
 
 function renderResults() {
   const result = scoreAssessment();
-
   const winner = result.first.k;
-  const winnerLabel = archetypeLabel(winner);
 
-  const f = result.fit.Franchise;
-  const e = result.fit.Existing;
-  const s = result.fit.Startup;
-  const maxPct = Math.max(f, e, s);
-  const bars = `
-    <div class="scores">
-    ${renderScoreRow("Franchise", f, winner === "Franchise", maxPct)}
-    ${renderScoreRow("Existing Business", e, winner === "Existing", maxPct)}
-    ${renderScoreRow("Startup", s, winner === "Startup", maxPct)}
-  </div>
-`;
-  const inner = `
-    <div class="result">
-      <div class="winner">Best Fit: <span class="winner-pill">${winnerLabel}</span></div>
-      ${bars}
-      <div class="explain">${result.explanation}</div>
-      <button id="restart" class="restart">Retake</button>
+  app.innerHTML = `
+    <div class="card">
+      <h2>Your Fit Score</h2>
+      <p><strong>Best Fit:</strong> ${winner}</p>
+      <p>Franchise: ${result.fit.Franchise}</p>
+      <p>Existing Business: ${result.fit.Existing}</p>
+      <p>Startup: ${result.fit.Startup}</p>
+      <button onclick="location.reload()">Retake</button>
     </div>
   `;
-
-  state.stepIndex = state.totalSteps;
-
-  renderShell("Your Fit Score", "", inner, true, "Done");
-  document.getElementById("next").style.display = "none";
-
-  document.getElementById("restart").addEventListener("click", () => {
-    state.stepIndex = 0;
-    state.wordChoices = [];
-    state.wordTimes = [];
-    state.pairChoices = [];
-    state.pairTimes = [];
-    state.scenarioChoices = [];
-    start();
-  });
 }
 
 /* ---------- START ---------- */
