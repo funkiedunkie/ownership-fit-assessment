@@ -31,25 +31,15 @@ function normalizeTo100(raw) {
   const total = raw.Franchise + raw.Existing + raw.Startup;
   if (total <= 0) return { Franchise: 33, Existing: 33, Startup: 34 };
 
-  let f = Math.round((raw.Franchise / total) * 100);
-  let e = Math.round((raw.Existing / total) * 100);
-  let s = Math.round((raw.Startup / total) * 100);
+  let f = (raw.Franchise / total) * 100;
+  let e = (raw.Existing / total) * 100;
+  let s = (raw.Startup / total) * 100;
 
-  let sum = f + e + s;
-  if (sum !== 100) {
-    const diff = 100 - sum;
-    const entries = [
-      { k: "Franchise", v: f },
-      { k: "Existing", v: e },
-      { k: "Startup", v: s }
-    ].sort((a, b) => b.v - a.v);
-
-    if (entries[0].k === "Franchise") f += diff;
-    if (entries[0].k === "Existing") e += diff;
-    if (entries[0].k === "Startup") s += diff;
-  }
-
-  return { Franchise: f, Existing: e, Startup: s };
+  return {
+    Franchise: Math.round(f),
+    Existing: Math.round(e),
+    Startup: Math.round(s)
+  };
 }
 
 function topTwo(normalized) {
@@ -138,9 +128,6 @@ const choiceMap = new Map([
   ["Adaptive", "Existing"],
   ["Own the process", "Existing"],
 
-  ["Experimental", "Startup"],
-  ["Exploratory", "Startup"],
-
   ["Comfortable", "Franchise"],
   ["Appreciate the clarity", "Franchise"],
   ["Cautious", "Franchise"],
@@ -173,21 +160,12 @@ const state = {
   stageChoices: []
 };
 
-/* ---------- UI HELPERS ---------- */
+/* ---------- UI ---------- */
 
-function renderShell(title, subtitle, innerHtml, nextEnabled = false, nextText = "Next") {
-  const progressPct = Math.round((state.stepIndex / state.totalSteps) * 100);
-
+function renderShell(title, innerHtml, nextEnabled = false, nextText = "Next") {
   app.innerHTML = `
     <div class="card">
-      <div class="header">
-        <div class="progress-wrap">
-          <div class="progress" style="width:${progressPct}%"></div>
-        </div>
-        <div class="step">${state.stepIndex} / ${state.totalSteps}</div>
-      </div>
       <h2>${title}</h2>
-      ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ""}
       <div class="content">${innerHtml}</div>
       <div class="footer">
         <button id="next" class="next" ${nextEnabled ? "" : "disabled"}>${nextText}</button>
@@ -225,22 +203,19 @@ function attachChoiceSelection(onSelect) {
       onSelect(selected);
     });
   });
-  return () => selected;
 }
 
 /* ---------- FLOW ---------- */
 
 function start() {
-  state.stepIndex = 0;
   renderWordPage(0);
 }
 
 function renderWordPage(idx) {
-  state.stepIndex++;
   const options = shuffle(wordPages[idx]);
   const startTime = performance.now();
 
-  renderShell("Pick the word that best describes you.", "", renderChoiceButtons(options));
+  renderShell("Pick the word that best describes you.", renderChoiceButtons(options));
 
   let selected = null;
   attachChoiceSelection(s => selected = s);
@@ -253,11 +228,10 @@ function renderWordPage(idx) {
 }
 
 function renderPair(idx) {
-  state.stepIndex++;
   const pair = shuffle(wordPairs[idx]);
   const startTime = performance.now();
 
-  renderShell("Which word or phrase dominates?", "", renderVsPair(pair[0], pair[1]));
+  renderShell("Which word or phrase dominates?", renderVsPair(pair[0], pair[1]));
 
   let selected = null;
   attachChoiceSelection(s => selected = s);
@@ -270,11 +244,8 @@ function renderPair(idx) {
 }
 
 function renderScenario(idx) {
-  state.stepIndex++;
   const s = scenarios[idx];
-  const options = shuffle(s.options);
-
-  renderShell(s.prompt, "", renderChoiceButtons(options));
+  renderShell(s.prompt, renderChoiceButtons(shuffle(s.options)));
 
   let selected = null;
   attachChoiceSelection(s => selected = s);
@@ -286,11 +257,9 @@ function renderScenario(idx) {
 }
 
 function renderStage(idx) {
-  state.stepIndex++;
   const q = stageQuestions[idx];
-  const options = shuffle(q.options);
-
-  renderShell(q.prompt, "", renderChoiceButtons(options), false,
+  renderShell(q.prompt, renderChoiceButtons(shuffle(q.options)),
+    false,
     idx === stageQuestions.length - 1 ? "See Results" : "Next");
 
   let selected = null;
@@ -314,30 +283,23 @@ function applyStageModifier(fit) {
   const top = sorted[0];
   const second = sorted[1];
 
-  if (
-    !(top.k === "Startup" ||
-      (second.k === "Startup" && Math.abs(top.v - second.v) <= 5))
-  ) return fit;
+  if (!(top.k === "Startup" ||
+      (second.k === "Startup" && Math.abs(top.v - second.v) <= 5)))
+    return fit;
 
   let intensity = 0;
+
   state.stageChoices.forEach(choice => {
-    if (
-      choice.includes("intense") ||
-      choice.includes("Time and intensity") ||
-      choice === "Higher"
-    ) intensity += 1;
-    if (
-      choice.includes("stable") ||
-      choice.includes("Capital for predictability") ||
-      choice === "Lower"
-    ) intensity -= 1;
+    if (choice.includes("intense") || choice.includes("Time and intensity") || choice === "Higher")
+      intensity += 1;
+    if (choice.includes("stable") || choice.includes("Capital for predictability") || choice === "Lower")
+      intensity -= 1;
   });
 
   if (intensity >= 0) return fit;
 
   const reduction = (Math.abs(intensity) / 3) * 0.2;
   const delta = Startup * reduction;
-  const newStartup = Startup - delta;
 
   const otherTotal = Franchise + Existing;
   let newFranchise = Franchise;
@@ -353,13 +315,12 @@ function applyStageModifier(fit) {
   return normalizeTo100({
     Franchise: newFranchise,
     Existing: newExisting,
-    Startup: newStartup
+    Startup: Startup - delta
   });
 }
 
 function scoreAssessment() {
   const raw = { Franchise: 0, Existing: 0, Startup: 0 };
-
   const medWord = median(state.wordTimes);
   const medPair = median(state.pairTimes);
 
@@ -381,22 +342,34 @@ function scoreAssessment() {
   let fit = normalizeTo100(raw);
   fit = applyStageModifier(fit);
 
-  const { first, second, gap } = topTwo(fit);
+  return fit;
+}
 
-  return { fit, first, second, gap };
+/* ---------- GRAPH RENDER ---------- */
+
+function renderScoreRow(label, pct, maxPct) {
+  const rel = Math.round((pct / maxPct) * 100);
+  return `
+    <div class="score-row">
+      <div class="score-label">${label}</div>
+      <div class="score-bar">
+        <div class="score-fill" style="width:${rel}%"></div>
+      </div>
+      <div class="score-pct">${pct}</div>
+    </div>
+  `;
 }
 
 function renderResults() {
-  const result = scoreAssessment();
-  const winner = result.first.k;
+  const fit = scoreAssessment();
+  const maxPct = Math.max(fit.Franchise, fit.Existing, fit.Startup);
 
   app.innerHTML = `
     <div class="card">
       <h2>Your Fit Score</h2>
-      <p><strong>Best Fit:</strong> ${winner}</p>
-      <p>Franchise: ${result.fit.Franchise}</p>
-      <p>Existing Business: ${result.fit.Existing}</p>
-      <p>Startup: ${result.fit.Startup}</p>
+      ${renderScoreRow("Franchise", fit.Franchise, maxPct)}
+      ${renderScoreRow("Existing Business", fit.Existing, maxPct)}
+      ${renderScoreRow("Startup", fit.Startup, maxPct)}
       <button onclick="location.reload()">Retake</button>
     </div>
   `;
