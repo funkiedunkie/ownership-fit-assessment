@@ -276,6 +276,7 @@ function renderStage(idx) {
 function applyStageModifier(fit) {
   let { Franchise, Existing, Startup } = fit;
 
+  // ----- Determine if modifier should activate -----
   const sorted = Object.entries(fit)
     .map(([k, v]) => ({ k, v }))
     .sort((a, b) => b.v - a.v);
@@ -283,25 +284,55 @@ function applyStageModifier(fit) {
   const top = sorted[0];
   const second = sorted[1];
 
-  if (!(top.k === "Startup" ||
-      (second.k === "Startup" && Math.abs(top.v - second.v) <= 5)))
+  const startupIsTop = top.k === "Startup";
+  const startupCloseSecond =
+    second.k === "Startup" &&
+    Math.abs(top.v - second.v) <= 5;
+
+  if (!startupIsTop && !startupCloseSecond) {
     return fit;
+  }
+
+  // ----- Deterministic Stage Scoring -----
+  const stageMap = new Map([
+    // High intensity
+    ["Building something that demands intense personal involvement", 1],
+    ["Time and intensity for upside", 1],
+    ["Higher", 1],
+
+    // Moderate
+    ["Improving and scaling something that already works", 0],
+    ["Focused effort for steady improvement", 0],
+    ["About the same", 0],
+
+    // Low intensity
+    ["Owning something stable that runs without me daily", -1],
+    ["Capital for predictability", -1],
+    ["Lower", -1]
+  ]);
 
   let intensity = 0;
 
   state.stageChoices.forEach(choice => {
-    if (choice.includes("intense") || choice.includes("Time and intensity") || choice === "Higher")
-      intensity += 1;
-    if (choice.includes("stable") || choice.includes("Capital for predictability") || choice === "Lower")
-      intensity -= 1;
+    if (stageMap.has(choice)) {
+      intensity += stageMap.get(choice);
+    }
   });
 
+  // If no low-intensity signal, don't reduce
   if (intensity >= 0) return fit;
 
-  const reduction = (Math.abs(intensity) / 3) * 0.2;
-  const delta = Startup * reduction;
+  // ----- Stronger Reduction -----
+  const maxReductionPercent = 0.35; // 35% max
+  const reductionPercent =
+    (Math.abs(intensity) / 3) * maxReductionPercent;
 
+  const delta = Startup * reductionPercent;
+  const newStartup = Startup - delta;
+
+  // ----- Proportional Redistribution -----
   const otherTotal = Franchise + Existing;
+
   let newFranchise = Franchise;
   let newExisting = Existing;
 
@@ -315,65 +346,10 @@ function applyStageModifier(fit) {
   return normalizeTo100({
     Franchise: newFranchise,
     Existing: newExisting,
-    Startup: Startup - delta
+    Startup: newStartup
   });
 }
 
-function scoreAssessment() {
-  const raw = { Franchise: 0, Existing: 0, Startup: 0 };
-  const medWord = median(state.wordTimes);
-  const medPair = median(state.pairTimes);
-
-  state.wordChoices.forEach((c, i) => {
-    const a = choiceMap.get(c);
-    if (a) raw[a] += timingWeight(state.wordTimes[i], medWord);
-  });
-
-  state.pairChoices.forEach((c, i) => {
-    const a = choiceMap.get(c);
-    if (a) raw[a] += timingWeight(state.pairTimes[i], medPair);
-  });
-
-  state.scenarioChoices.forEach(c => {
-    const a = choiceMap.get(c);
-    if (a) raw[a] += 1;
-  });
-
-  let fit = normalizeTo100(raw);
-  fit = applyStageModifier(fit);
-
-  return fit;
-}
-
-/* ---------- GRAPH RENDER ---------- */
-
-function renderScoreRow(label, pct, maxPct) {
-  const rel = Math.round((pct / maxPct) * 100);
-  return `
-    <div class="score-row">
-      <div class="score-label">${label}</div>
-      <div class="score-bar">
-        <div class="score-fill" style="width:${rel}%"></div>
-      </div>
-      <div class="score-pct">${pct}</div>
-    </div>
-  `;
-}
-
-function renderResults() {
-  const fit = scoreAssessment();
-  const maxPct = Math.max(fit.Franchise, fit.Existing, fit.Startup);
-
-  app.innerHTML = `
-    <div class="card">
-      <h2>Your Fit Score</h2>
-      ${renderScoreRow("Franchise", fit.Franchise, maxPct)}
-      ${renderScoreRow("Existing Business", fit.Existing, maxPct)}
-      ${renderScoreRow("Startup", fit.Startup, maxPct)}
-      <button onclick="location.reload()">Retake</button>
-    </div>
-  `;
-}
 
 /* ---------- START ---------- */
 
