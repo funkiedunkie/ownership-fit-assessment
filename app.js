@@ -316,23 +316,6 @@ function calculateScores() {
 function applyStageModifier(fit) {
   let { Franchise, Existing, Startup } = fit;
 
-  // ----- Determine if modifier should activate -----
-  const sorted = Object.entries(fit)
-    .map(([k, v]) => ({ k, v }))
-    .sort((a, b) => b.v - a.v);
-
-  const top = sorted[0];
-  const second = sorted[1];
-
-  const startupIsTop = top.k === "Startup";
-  const startupCloseSecond =
-    second.k === "Startup" &&
-    Math.abs(top.v - second.v) <= 5;
-
-  if (!startupIsTop && !startupCloseSecond) {
-    return fit;
-  }
-
   // ----- Deterministic Stage Scoring -----
   const stageMap = new Map([
     // High intensity
