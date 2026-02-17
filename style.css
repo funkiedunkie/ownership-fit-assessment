@@ -207,7 +207,7 @@ h2{
 
 .score-bar{
   height: 12px;
-  background: transparent; /* removes the "missing" grey */
+  background: transparent;
   border: 1px solid var(--border);
   border-radius: 999px;
   overflow: hidden;
@@ -217,7 +217,9 @@ h2{
   height: 100%;
   background: var(--primary);
   width: 0%;
+  transition: width 0.4s ease;
 }
+
 /* winner bar */
 .winner-row .score-fill{
   background: var(--winner);
@@ -226,10 +228,6 @@ h2{
 /* non-winner bars */
 .secondary-row .score-fill{
   background: #9ca3af;
-}
-
-.winner-row .score-fill{
-  background: var(--winner);
 }
 
 .score-pct{
@@ -268,44 +266,4 @@ h2{
   .choice{
     text-align: center;
   }
-  /* keep VS pair as 2 buttons + VS always */
-}
-/* ===== SCORE GRAPH ===== */
-
-.scores {
-  margin-top: 20px;
-}
-
-.score-row {
-  display: flex;
-  align-items: center;
-  margin: 14px 0;
-  gap: 12px;
-}
-
-.score-label {
-  width: 140px;
-  font-weight: 600;
-}
-
-.score-bar {
-  flex: 1;
-  height: 14px;
-  background: #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-}
-
-.score-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #2563eb, #1d4ed8);
-  border-radius: 8px;
-  transition: width 0.4s ease;
-}
-
-.score-pct {
-  width: 40px;
-  text-align: right;
-  font-weight: 600;
 }
