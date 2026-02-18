@@ -162,21 +162,34 @@ const state = {
 function renderShell(title, innerHtml, nextEnabled = false, nextText = "Next") {
   const progressPercent = (state.currentStep / state.totalSteps) * 100;
   
-  app.innerHTML = `
-    <div class="card">
-      <div class="header">
-        <div class="progress-wrap">
-          <div class="progress" style="width: ${progressPercent}%"></div>
+  // Add exit animation to current card
+  const currentCard = document.querySelector('.card');
+  if (currentCard) {
+    currentCard.classList.add('slide-out');
+    setTimeout(() => {
+      updateContent();
+    }, 200);
+  } else {
+    updateContent();
+  }
+  
+  function updateContent() {
+    app.innerHTML = `
+      <div class="card">
+        <div class="header">
+          <div class="progress-wrap">
+            <div class="progress" style="width: ${progressPercent}%"></div>
+          </div>
+          <div class="step">${state.currentStep} / ${state.totalSteps}</div>
         </div>
-        <div class="step">${state.currentStep} / ${state.totalSteps}</div>
+        <h2>${title}</h2>
+        <div class="content">${innerHtml}</div>
+        <div class="footer">
+          <button id="next" class="next" ${nextEnabled ? "" : "disabled"}>${nextText}</button>
+        </div>
       </div>
-      <h2>${title}</h2>
-      <div class="content">${innerHtml}</div>
-      <div class="footer">
-        <button id="next" class="next" ${nextEnabled ? "" : "disabled"}>${nextText}</button>
-      </div>
-    </div>
-  `;
+    `;
+  }
 }
 
 function renderChoiceButtons(options) {
@@ -201,8 +214,24 @@ function attachChoiceSelection(onSelect) {
   let selected = null;
   document.querySelectorAll(".choice").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".choice").forEach(b => b.classList.remove("selected"));
+      document.querySelectorAll(".choice").forEach(b => {
+        b.classList.remove("selected");
+        // Remove any existing checkmarks
+        const existingCheck = b.querySelector(".checkmark");
+        if (existingCheck) existingCheck.remove();
+      });
       btn.classList.add("selected");
+      
+      // Add checkmark animation
+      const checkmark = document.createElement("span");
+      checkmark.className = "checkmark";
+      checkmark.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M4 10L8 14L16 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+      btn.appendChild(checkmark);
+      
       selected = btn.textContent.trim();
       document.getElementById("next").disabled = false;
       onSelect(selected);
@@ -395,6 +424,9 @@ function renderResults() {
   const winner = first.k;
   const explanation = getExplanation(winner, scores);
 
+  // Trigger confetti
+  createConfetti();
+
   const html = `
     <div class="result">
       <div class="winner">
@@ -408,7 +440,7 @@ function renderResults() {
             <div class="score-row ${idx === 0 ? 'winner-row' : 'secondary-row'}">
               <div class="score-label">${type}</div>
               <div class="score-bar">
-                <div class="score-fill" style="width: ${pct}%"></div>
+                <div class="score-fill" style="width: 0%" data-target="${pct}"></div>
               </div>
               <div class="score-pct">${pct}%</div>
             </div>
@@ -423,6 +455,33 @@ function renderResults() {
 
   renderShell("Your Ownership Fit Profile", html, false, "");
   document.querySelector('.footer').style.display = 'none';
+  
+  // Animate score bars racing
+  setTimeout(() => {
+    document.querySelectorAll('.score-fill').forEach((fill, idx) => {
+      setTimeout(() => {
+        const target = fill.getAttribute('data-target');
+        fill.style.width = target + '%';
+      }, idx * 200);
+    });
+  }, 300);
+}
+
+function createConfetti() {
+  const colors = ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const confettiCount = 50;
+  
+  for (let i = 0; i < confettiCount; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = Math.random() * 0.3 + 's';
+    confetti.style.animationDuration = (Math.random() * 1 + 2) + 's';
+    document.body.appendChild(confetti);
+    
+    setTimeout(() => confetti.remove(), 3000);
+  }
 }
 
 /* ---------- START ---------- */
