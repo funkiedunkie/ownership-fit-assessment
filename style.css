@@ -36,17 +36,28 @@ body {
   border-radius: 14px;
   box-shadow: var(--shadow);
   padding: 22px;
-  animation: fadeIn 0.3s ease-out;
+  animation: slideIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateX(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
+  }
+}
+
+.card.slide-out {
+  animation: slideOut 0.2s ease-in forwards;
+}
+
+@keyframes slideOut {
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
   }
 }
 
@@ -69,9 +80,27 @@ body {
 
 .progress{
   height: 100%;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), #3b82f6);
   width: 0%;
   transition: width 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
+
+.progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6));
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 .step{
@@ -133,21 +162,48 @@ h2{
 
 .choice:hover{
   background: var(--choice-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .choice:active{
-  transform: translateY(1px);
+  transform: scale(0.98);
 }
 
 .choice.selected{
   background: var(--selected-bg);
   border-color: var(--selected-border);
-  animation: pulse 0.3s ease-out;
+  animation: spring 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+.checkmark {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: var(--primary);
+  animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkPop {
+  0% { 
+    transform: translateY(-50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.2);
+  }
+  100% { 
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spring {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 .footer{
@@ -252,7 +308,7 @@ h2{
   height: 100%;
   background: var(--primary);
   width: 0%;
-  transition: width 0.4s ease;
+  transition: width 0.8s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 /* winner bar */
@@ -300,5 +356,22 @@ h2{
   }
   .choice{
     text-align: center;
+  }
+}
+
+/* Confetti */
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  z-index: 1000;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
   }
 }
