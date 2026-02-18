@@ -89,24 +89,15 @@ const scenarios = [
 
 const stageQuestions = [
   {
-    prompt: "At this stage of my life, I'm most interested in:",
+    prompt: "At this stage in my life, I'd prefer to leverage:",
     options: [
-      "Building something that demands intense personal involvement",
-      "Improving and scaling something that already works",
-      "Owning something stable that runs without me daily"
+      "My time and effort",
+      "My capital and resources"
     ]
   },
   {
-    prompt: "Over the next 3–5 years, I'm most willing to trade:",
-    options: [
-      "Time and intensity for upside",
-      "Focused effort for steady improvement",
-      "Capital for predictability"
-    ]
-  },
-  {
-    prompt: "Compared to earlier in my career, my tolerance for sustained uncertainty is:",
-    options: ["Higher", "About the same", "Lower"]
+    prompt: "My tolerance for 60+ hour weeks at this stage of my life is:",
+    options: ["High", "Moderate", "Low"]
   }
 ];
 
@@ -151,7 +142,7 @@ const choiceMap = new Map([
 /* ---------- STATE ---------- */
 
 const state = {
-  stepIndex: 0,
+  currentStep: 0,
   totalSteps:
     wordPages.length +
     wordPairs.length +
@@ -169,8 +160,16 @@ const state = {
 /* ---------- UI ---------- */
 
 function renderShell(title, innerHtml, nextEnabled = false, nextText = "Next") {
+  const progressPercent = (state.currentStep / state.totalSteps) * 100;
+  
   app.innerHTML = `
     <div class="card">
+      <div class="header">
+        <div class="progress-wrap">
+          <div class="progress" style="width: ${progressPercent}%"></div>
+        </div>
+        <div class="step">${state.currentStep} / ${state.totalSteps}</div>
+      </div>
       <h2>${title}</h2>
       <div class="content">${innerHtml}</div>
       <div class="footer">
@@ -229,6 +228,7 @@ function renderWordPage(idx) {
   document.getElementById("next").addEventListener("click", () => {
     state.wordChoices.push(selected);
     state.wordTimes.push(performance.now() - startTime);
+    state.currentStep++;
     idx < wordPages.length - 1 ? renderWordPage(idx + 1) : renderPair(0);
   });
 }
@@ -245,6 +245,7 @@ function renderPair(idx) {
   document.getElementById("next").addEventListener("click", () => {
     state.pairChoices.push(selected);
     state.pairTimes.push(performance.now() - startTime);
+    state.currentStep++;
     idx < wordPairs.length - 1 ? renderPair(idx + 1) : renderScenario(0);
   });
 }
@@ -258,6 +259,7 @@ function renderScenario(idx) {
 
   document.getElementById("next").addEventListener("click", () => {
     state.scenarioChoices.push(selected);
+    state.currentStep++;
     idx < scenarios.length - 1 ? renderScenario(idx + 1) : renderStage(0);
   });
 }
@@ -273,6 +275,7 @@ function renderStage(idx) {
 
   document.getElementById("next").addEventListener("click", () => {
     state.stageChoices.push(selected);
+    state.currentStep++;
     idx < stageQuestions.length - 1 ? renderStage(idx + 1) : renderResults();
   });
 }
@@ -318,20 +321,14 @@ function applyStageModifier(fit) {
 
   // ----- Deterministic Stage Scoring -----
   const stageMap = new Map([
-    // High intensity
-    ["Building something that demands intense personal involvement", 1],
-    ["Time and intensity for upside", 1],
-    ["Higher", 1],
+    // Question 1: Leverage preference
+    ["My time and effort", 1],
+    ["My capital and resources", -1],
 
-    // Moderate
-    ["Improving and scaling something that already works", 0],
-    ["Focused effort for steady improvement", 0],
-    ["About the same", 0],
-
-    // Low intensity
-    ["Owning something stable that runs without me daily", -1],
-    ["Capital for predictability", -1],
-    ["Lower", -1]
+    // Question 2: Work tolerance
+    ["High", 1],
+    ["Moderate", 0],
+    ["Low", -1]
   ]);
 
   let intensity = 0;
@@ -345,10 +342,11 @@ function applyStageModifier(fit) {
   // If no low-intensity signal, don't reduce
   if (intensity >= 0) return fit;
 
-  // ----- Stronger Reduction -----
-  const maxReductionPercent = 0.35; // 35% max
-  const reductionPercent =
-    (Math.abs(intensity) / 3) * maxReductionPercent;
+  // ----- Reduction based on intensity score -----
+  // intensity = -1: ~17.5% reduction
+  // intensity = -2: ~35% reduction
+  const maxReductionPercent = 0.35;
+  const reductionPercent = (Math.abs(intensity) / 2) * maxReductionPercent;
 
   const delta = Startup * reductionPercent;
   const newStartup = Startup - delta;
