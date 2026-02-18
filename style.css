@@ -36,6 +36,18 @@ body {
   border-radius: 14px;
   box-shadow: var(--shadow);
   padding: 22px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header{
@@ -59,6 +71,7 @@ body {
   height: 100%;
   background: var(--primary);
   width: 0%;
+  transition: width 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .step{
@@ -100,7 +113,23 @@ h2{
   font-size: 16px;
   white-space: pre-line;
   transition: transform 0.03s ease, background 0.15s ease, border-color 0.15s ease;
+  animation: slideIn 0.3s ease-out backwards;
 }
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.choice:nth-child(1) { animation-delay: 0.05s; }
+.choice:nth-child(2) { animation-delay: 0.1s; }
+.choice:nth-child(3) { animation-delay: 0.15s; }
 
 .choice:hover{
   background: var(--choice-hover);
@@ -113,6 +142,12 @@ h2{
 .choice.selected{
   background: var(--selected-bg);
   border-color: var(--selected-border);
+  animation: pulse 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
 }
 
 .footer{
